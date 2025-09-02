@@ -1,22 +1,243 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0">
-    
-    <body style="background-color: white;">
-    
-</body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Ronda QR - App</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset e fontes */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+    body { background: #f0f2f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background: #c0392b; color: #fff; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; }
+    main { flex: 1; padding: 15px; max-width: 500px; margin: auto; width: 100%; }
 
-    <style>
-        iframe { width: 100%; height: 100vh; border: none; }
-    </style>
+    /* Navegação */
+    nav { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; }
+    nav button {
+      flex: 1; margin: 5px; padding: 12px 0; border: none; border-radius: 12px; cursor: pointer;
+      background: #c0392b; color: #fff; font-weight: bold; transition: 0.3s;
+    }
+    nav button:hover { background: #e74c3c; }
+    nav button:disabled { background: #aaa; cursor: not-allowed; }
+
+    section { display: none; animation: fadeIn 0.3s ease-in-out; }
+    section.active { display: block; }
+
+    /* Inputs e botões */
+    input, textarea, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; }
+    button { background: #c0392b; color: #fff; font-weight: bold; border: none; cursor: pointer; }
+    button:hover { background: #e74c3c; }
+    textarea { resize: vertical; min-height: 60px; }
+
+    /* Scanner QR */
+    #reader { width: 100%; max-width: 300px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+    /* Cards para checkpoints */
+    .checkpoints { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+    .checkpoint { background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: bold; }
+
+    /* Relatório */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; text-align: center; }
+    th { background: #c0392b; color: #fff; font-weight: bold; }
+    tr:nth-child(even) { background: #f7f7f7; }
+    .status-ok { color: #2ecc71; font-weight: bold; }        /* verde */
+    .status-rejeitado { color: #e74c3c; font-weight: bold; } /* vermelho */
+
+    /* Animação fade */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Responsivo */
+    @media(max-width: 480px) {
+      nav { flex-direction: column; }
+      nav button { flex: none; }
+    }
+  </style>
 </head>
 <body>
-    
 
-<iframe width="600" height="371" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_GS2ETHdGjplpP-2qydLTCey7cDOMrLgI4sQYt7JzT_OdOJ8YapHJy2NYpvaAh_Ma_uiir4HU5c7u/pubchart?oid=1596119421&format=interactive">
-    
-</iframe>
+<header>Sistema de Ronda QR</header>
+
+<main>
+  <!-- Navegação -->
+  <nav>
+    <button onclick="mostrarSecao('login')">Login</button>
+    <button id="btnRonda" onclick="mostrarSecao('ronda')" disabled>Ronda</button>
+    <button id="btnRelatorio" onclick="mostrarSecao('relatorio')" disabled>Relatório</button>
+    <button id="btnLogout" onclick="logout()" disabled>Sair</button>
+  </nav>
+
+  <!-- Login -->
+  <section id="login" class="active">
+    <h2>Login do Vigilante</h2>
+    <input type="text" id="vigilante" placeholder="Digite seu nome">
+    <input type="password" id="senha" placeholder="Digite sua senha">
+    <button onclick="loginVigilante()">Entrar</button>
+  </section>
+
+  <!-- Ronda -->
+  <section id="ronda">
+    <h2>Ronda - Leitura de QR Code</h2>
+    <p>Vigilante: <b id="nomeVigilante"></b></p>
+
+    <h3>Observações</h3>
+    <textarea id="observacao" placeholder="Opcional"></textarea>
+
+    <div id="reader"></div>
+
+    <h3>Checkpoints válidos</h3>
+    <div class="checkpoints" id="listaCheckpoints"></div>
+  </section>
+
+  <!-- Relatório -->
+  <section id="relatorio">
+    <h2>Relatório de Rondas</h2>
+    <button onclick="exportarCSV()">Exportar CSV</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Vigilante</th>
+          <th>Checkpoint</th>
+          <th>Status</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaRondas"></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+  const usuarios = [
+    {nome: "João", senha: "1234"},
+    {nome: "Maria", senha: "abcd"},
+    {nome: "Pedro", senha: "5678"}
+  ];
+
+  const checkpointsValidos = ["P1", "P2", "P3", "P4", "P5"];
+  let scanner = null;
+  let vigilante = null;
+
+  function mostrarSecao(secaoId) {
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(secaoId).classList.add("active");
+
+    if (secaoId === "ronda" && !scanner) iniciarScanner();
+    if (secaoId === "ronda") carregarCheckpoints();
+    if (secaoId === "relatorio") carregarRelatorio();
+  }
+
+  function loginVigilante() {
+    const nome = document.getElementById('vigilante').value.trim();
+    const senha = document.getElementById('senha').value.trim();
+    const usuario = usuarios.find(u => u.nome === nome && u.senha === senha);
+
+    if (usuario) {
+      vigilante = usuario.nome;
+      localStorage.setItem("vigilanteLogado", vigilante);
+      document.getElementById("nomeVigilante").textContent = vigilante;
+      document.getElementById("btnRonda").disabled = false;
+      document.getElementById("btnRelatorio").disabled = false;
+      document.getElementById("btnLogout").disabled = false;
+      mostrarSecao("ronda");
+    } else {
+      alert("Usuário ou senha incorretos!");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("vigilanteLogado");
+    vigilante = null;
+    document.getElementById("btnRonda").disabled = true;
+    document.getElementById("btnRelatorio").disabled = true;
+    document.getElementById("btnLogout").disabled = true;
+    mostrarSecao("login");
+  }
+
+  function registrarRondaQR(checkpointId) {
+    const observacao = document.getElementById('observacao').value.trim();
+    const hora = new Date().toLocaleString();
+    let status = "REJEITADO";
+
+    if (checkpointsValidos.includes(checkpointId)) {
+      status = "OK";
+      alert("✅ QR Code válido! Ronda registrada.");
+    } else {
+      alert("❌ QR Code inválido!");
+    }
+
+    let rondas = JSON.parse(localStorage.getItem('rondas')) || [];
+    rondas.push({vigilante, checkpoint: checkpointId, status, observacao, hora});
+    localStorage.setItem('rondas', JSON.stringify(rondas));
+    document.getElementById('observacao').value = '';
+  }
+
+  function iniciarScanner() {
+    scanner = new Html5Qrcode("reader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      (decodedText) => registrarRondaQR(decodedText)
+    );
+  }
+
+  function carregarRelatorio() {
+    const rondas = JSON.parse(localStorage.getItem('rondas')) || [];
+    const tabela = document.getElementById('tabelaRondas');
+    tabela.innerHTML = "";
+    rondas.forEach(r => {
+      let statusClass = r.status === "OK" ? "status-ok" : "status-rejeitado";
+      let row = `<tr>
+        <td>${r.hora}</td>
+        <td>${r.vigilante}</td>
+        <td>${r.checkpoint}</td>
+        <td class="${statusClass}">${r.status}</td>
+        <td>${r.observacao}</td>
+      </tr>`;
+      tabela.innerHTML += row;
+    });
+  }
+
+  function exportarCSV() {
+    const rondas = JSON.parse(localStorage.getItem('rondas')) || [];
+    if (!rondas.length) { alert("Nenhuma ronda registrada!"); return; }
+
+    let csv = 'Vigilante,Checkpoint,Status,Observacao,DataHora\n';
+    rondas.forEach(r => {
+      csv += `"${r.vigilante}","${r.checkpoint}","${r.status}","${r.observacao}","${r.hora}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "rondas.csv";
+    link.click();
+  }
+
+  function carregarCheckpoints() {
+    const container = document.getElementById('listaCheckpoints');
+    container.innerHTML = "";
+    checkpointsValidos.forEach(cp => {
+      const div = document.createElement('div');
+      div.className = 'checkpoint';
+      div.textContent = cp;
+      container.appendChild(div);
+    });
+  }
+
+  window.onload = () => {
+    vigilante = localStorage.getItem("vigilanteLogado");
+    if (vigilante) {
+      document.getElementById("nomeVigilante").textContent = vigilante;
+      document.getElementById("btnRonda").disabled = false;
+      document.getElementById("btnRelatorio").disabled = false;
+      document.getElementById("btnLogout").disabled = false;
+      mostrarSecao("ronda");
+    }
+  }
+</script>
 </body>
 </html>
