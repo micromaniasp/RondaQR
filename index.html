@@ -7,72 +7,67 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
-body { display: flex; min-height: 100vh; background: #f0f2f5; transition: all 0.3s ease; }
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Roboto',sans-serif;}
+body { display:flex; min-height:100vh; background:#f0f2f5; transition:all 0.3s ease;}
+/* Menu retrátil */
+nav { 
+  width:60px; 
+  background:#c0392b; color:#fff; display:flex; flex-direction:column; padding-top:20px; flex-shrink:0; overflow:hidden; transition: width 0.3s ease;
+}
+nav.expanded { width:220px; }
+nav .logo { display:flex; justify-content:center; margin-bottom:20px; }
+nav .logo img { width:40px; transition: all 0.3s; border-radius:8px; }
+nav.expanded .logo img { width:150px; }
+nav button { margin:5px 15px; padding:12px; border:none; border-radius:8px; cursor:pointer; background:#e74c3c; color:#fff; font-weight:bold; font-size:16px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:0.3s; }
+nav button.active { background:#ff5c4d; }
+nav button:hover { background:#ff5c4d; }
+nav button:disabled { background:#aaa; cursor:not-allowed; }
 
-nav { width: 220px; background: #c0392b; color: #fff; display: flex; flex-direction: column; padding-top: 20px; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
-nav .logo { display: flex; justify-content: center; margin-bottom: 20px; }
-nav .logo img { width: 150px; border-radius: 8px; }
-nav button { margin: 5px 15px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: #e74c3c; color: #fff; font-weight: bold; font-size: 16px; transition: 0.3s; }
-nav button.active { background: #ff5c4d; }
-nav button:hover { background: #ff5c4d; }
-nav button:disabled { background: #aaa; cursor: not-allowed; }
+/* Hamburger mobile */
+.hamburger { display:none; position:absolute; top:15px; left:15px; width:30px; height:3px; background:#fff; cursor:pointer; z-index:1100; }
+.hamburger::before,.hamburger::after { content:''; position:absolute; width:30px; height:3px; background:#fff; transition:all 0.3s ease; }
+.hamburger::before { top:-10px; }
+.hamburger::after { bottom:-10px; }
 
-.hamburger { display: none; position: absolute; top: 15px; left: 15px; width: 30px; height: 3px; background: #fff; cursor: pointer; transition: all 0.3s ease; }
-.hamburger::before, .hamburger::after { content: ''; position: absolute; width: 30px; height: 3px; background: #fff; transition: all 0.3s ease; }
-.hamburger::before { top: -10px; }
-.hamburger::after { bottom: -10px; }
-
-main { flex: 1; padding: 20px; overflow-y: auto; transition: all 0.3s ease; }
-
-section { display: none; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; }
-section.active { display: block; opacity: 1; transform: translateY(0); }
-
-input, textarea, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; transition: all 0.2s ease; }
-button { background: #c0392b; color: #fff; font-weight: bold; border: none; cursor: pointer; }
-button:hover { background: #e74c3c; }
-textarea { resize: vertical; min-height: 60px; }
-
-#reader { width: 100%; max-width: 300px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-
-.checkpoints { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
-.checkpoint { background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: bold; transition: background 0.3s ease; }
-.checkpoint.ok { background: #2ecc71; color: #fff; }
-.checkpoint.pending { background: #e74c3c; color: #fff; }
-
-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-th, td { padding: 12px; text-align: center; }
-th { background: #c0392b; color: #fff; font-weight: bold; }
-tr:nth-child(even) { background: #f7f7f7; }
-.status-ok { color: #2ecc71; font-weight: bold; }
-.status-rejeitado { color: #e74c3c; font-weight: bold; }
-
-@keyframes fadeInRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.fade-in { animation: fadeInRow 0.5s ease forwards; }
-
-@media(max-width: 768px){
-    body { flex-direction: column; }
-    nav { width: 100%; flex-direction: column; position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; padding-top: 60px; box-shadow: 2px 0 12px rgba(0,0,0,0.2); }
-    nav.show { left: 0; transition: left 0.3s ease; }
-    .hamburger { display: block; }
-    main { padding: 80px 20px 20px 20px; }
+main { flex:1; padding:20px; overflow-y:auto; transition:all 0.3s ease; }
+section { display:none; opacity:0; transform:translateY(20px); transition:all 0.3s ease;}
+section.active { display:block; opacity:1; transform:translateY(0);}
+input,textarea,button { width:100%; padding:12px; margin:10px 0; border-radius:12px; border:1px solid #ccc; font-size:16px; transition: all 0.2s ease;}
+button { background:#c0392b; color:#fff; font-weight:bold; border:none; cursor:pointer;}
+button:hover { background:#e74c3c;}
+textarea { resize:vertical; min-height:60px;}
+#reader { width:100%; max-width:300px; margin:20px auto; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.checkpoints { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px;}
+.checkpoint { background:#fff; padding:10px 15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); font-weight:bold; transition:background 0.3s ease;}
+.checkpoint.ok { background:#2ecc71; color:#fff;}
+.checkpoint.pending { background:#e74c3c; color:#fff;}
+.checkpoints.sequence-reset .checkpoint { transform: scale(1.1); transition: transform 0.5s ease; }
+table { width:100%; border-collapse:collapse; margin-top:15px; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+th,td { padding:12px; text-align:center;}
+th { background:#c0392b; color:#fff; font-weight:bold;}
+tr:nth-child(even) { background:#f7f7f7;}
+.status-ok { color:#2ecc71; font-weight:bold;}
+.status-rejeitado { color:#e74c3c; font-weight:bold;}
+@keyframes fadeInRow { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.fade-in { animation:fadeInRow 0.5s ease forwards;}
+@media(max-width:768px){
+    body { flex-direction:column;}
+    nav { position:fixed; left:-250px; top:0; height:100%; width:220px; z-index:1000; }
+    nav.show { left:0; transition:left 0.3s ease; }
+    .hamburger { display:block; }
+    main { padding:80px 20px 20px 20px;}
 }
 </style>
 </head>
 <body>
-
 <div class="hamburger" onclick="toggleMenu()"></div>
-
 <nav id="menuNav">
-  <div class="logo">
-    <img src="https://www.megarelogios.com.br/wp-content/uploads/2017/04/logotipo.png" alt="Logo">
-  </div>
+  <div class="logo"><img src="https://www.megarelogios.com.br/wp-content/uploads/2017/04/logotipo.png" alt="Logo"></div>
   <button onclick="mostrarSecao('login')" id="menuLogin" class="active">Login</button>
   <button id="btnRonda" onclick="mostrarSecao('ronda')" disabled>Ronda</button>
   <button id="btnRelatorio" onclick="mostrarSecao('relatorio')" disabled>Relatório</button>
   <button id="btnLogout" onclick="logout()" disabled>Sair</button>
 </nav>
-
 <main>
   <section id="login">
     <h2>Login do Vigilante</h2>
@@ -80,7 +75,6 @@ tr:nth-child(even) { background: #f7f7f7; }
     <input type="password" id="senha" placeholder="Digite sua senha">
     <button onclick="loginVigilante()">Entrar</button>
   </section>
-
   <section id="ronda">
     <h2>Ronda - Leitura de QR Code</h2>
     <p>Vigilante: <b id="nomeVigilante"></b></p>
@@ -90,7 +84,6 @@ tr:nth-child(even) { background: #f7f7f7; }
     <h3>Checkpoints válidos</h3>
     <div class="checkpoints" id="listaCheckpoints"></div>
   </section>
-
   <section id="relatorio">
     <h2>Relatório de Rondas</h2>
     <button onclick="exportarCSV()">Exportar CSV</button>
@@ -110,21 +103,27 @@ tr:nth-child(even) { background: #f7f7f7; }
 </main>
 
 <script>
-const usuarios = [{nome: "João", senha: "1234"}, {nome: "Maria", senha: "abcd"}, {nome: "Pedro", senha: "5678"}];
-const checkpointsValidos = ["P1","P2","P3","P4","P5"];
-let scanner = null;
-let vigilante = null;
-const GITHUB_JSON_URL = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPOSITORIO/main/rondas.json";
+const usuarios=[{nome:"João",senha:"1234"},{nome:"Maria",senha:"abcd"},{nome:"Pedro",senha:"5678"}];
+const checkpointsValidos=["P1","P2","P3","P4","P5"];
+let scanner=null, vigilante=null;
+const GITHUB_JSON_URL="https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPOSITORIO/main/rondas.json";
+const SEQUENCE_TIMEOUT=60*60*1000;
+let bloqueioQR=false;
 
-function toggleMenu(){ document.getElementById('menuNav').classList.toggle('show'); }
+const menuNav=document.getElementById('menuNav');
+menuNav.addEventListener('mouseenter',()=>menuNav.classList.add('expanded'));
+menuNav.addEventListener('mouseleave',()=>menuNav.classList.remove('expanded'));
+
+function toggleMenu(){ menuNav.classList.toggle('show'); }
+
 function mostrarSecao(secaoId){
-    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
     document.getElementById(secaoId).classList.add("active");
-    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('active'));
     if(secaoId==='login') document.getElementById('menuLogin').classList.add('active');
     else if(secaoId==='ronda') document.getElementById('btnRonda').classList.add('active');
     else if(secaoId==='relatorio') document.getElementById('btnRelatorio').classList.add('active');
-    if(window.innerWidth <= 768) toggleMenu();
+    if(window.innerWidth<=768) toggleMenu();
     if(secaoId==="ronda" && !scanner) iniciarScanner();
     if(secaoId==="ronda") carregarCheckpoints();
     if(secaoId==="relatorio") carregarRelatorio();
@@ -156,17 +155,49 @@ function logout(){
     mostrarSecao("login");
 }
 
+function verificarReinicioSequencia(){
+    const inicioSequencia=localStorage.getItem('inicioSequencia');
+    const agora=Date.now();
+    if(!inicioSequencia || (agora - inicioSequencia)>=SEQUENCE_TIMEOUT){
+        localStorage.setItem('inicioSequencia', agora);
+        let rondas=JSON.parse(localStorage.getItem('rondas'))||[];
+        rondas=rondas.map(r=>{
+            if(r.vigilante===vigilante && r.status==="OK"){ return {...r, resetVisual:true}; }
+            return r;
+        });
+        localStorage.setItem('rondas',JSON.stringify(rondas));
+        carregarCheckpoints();
+        carregarRelatorio();
+    }
+}
+
 function registrarRondaQR(checkpointId){
+    if(bloqueioQR) return;
+    bloqueioQR=true;
+    verificarReinicioSequencia();
     const observacao=document.getElementById('observacao').value.trim();
     const hora=new Date().toLocaleString();
-    let status=checkpointsValidos.includes(checkpointId)?"OK":"REJEITADO";
-    alert(status==="OK"?"✅ QR Code válido!":"❌ QR Code inválido!");
     let rondas=JSON.parse(localStorage.getItem('rondas'))||[];
-    rondas.push({vigilante,checkpoint:checkpointId,status,observacao,hora});
+    const rondasVigilante=rondas.filter(r=>r.vigilante===vigilante && r.status==="OK" && !r.resetVisual);
+    let ultimaIndex=-1;
+    if(rondasVigilante.length>0){
+        const ultimoCheckpoint=rondasVigilante[rondasVigilante.length-1].checkpoint;
+        ultimaIndex=checkpointsValidos.indexOf(ultimoCheckpoint);
+    }
+    const indexAtual=checkpointsValidos.indexOf(checkpointId);
+    let status, observacaoExtra="";
+    if(indexAtual === ultimaIndex + 1){ status="OK"; observacaoExtra="✅ QR Code válido! Checkpoint registrado.";}
+    else if(indexAtual <= ultimaIndex){ status="REJEITADO"; observacaoExtra="❌ QR Code inválido! Fora de sequência ou duplicado.";}
+    else { status="OK"; observacaoExtra="⚠️ Fora de sequência (pulo de checkpoint)"; }
+
+    rondas.push({vigilante, checkpoint:checkpointId, status, observacao:observacaoExtra || observacao, hora, resetVisual:false});
     localStorage.setItem('rondas',JSON.stringify(rondas));
-    document.getElementById('observacao').value='';
+
+    alert(observacaoExtra);
     carregarCheckpoints();
     carregarRelatorio();
+    document.getElementById('observacao').value='';
+    setTimeout(()=>{ bloqueioQR=false; },3000);
 }
 
 function iniciarScanner(){
@@ -177,12 +208,22 @@ function iniciarScanner(){
 function carregarCheckpoints(){
     const container=document.getElementById('listaCheckpoints'); container.innerHTML="";
     const rondas=JSON.parse(localStorage.getItem('rondas'))||[];
-    const checkpointsRegistrados=rondas.filter(r=>r.vigilante===vigilante && r.status==="OK").map(r=>r.checkpoint);
+    const rondasVigilante=rondas.filter(r=>r.vigilante===vigilante && r.status==="OK" && !r.resetVisual);
+    const checkpointsRegistrados=rondasVigilante.map(r=>r.checkpoint);
     checkpointsValidos.forEach(cp=>{
         const div=document.createElement('div'); div.className='checkpoint';
-        div.classList.add(checkpointsRegistrados.includes(cp)?'ok':'pending'); div.textContent=cp;
+        const rondaCP=rondasVigilante.find(r=>r.checkpoint===cp);
+        if(checkpointsRegistrados.includes(cp)){
+            if(rondaCP && rondaCP.observacao.includes("Fora de sequência")) div.classList.add('pending');
+            else div.classList.add('ok');
+        } else { div.classList.add('pending'); }
+        div.textContent=cp;
         container.appendChild(div);
     });
+    if(localStorage.getItem('inicioSequencia')){
+        container.classList.add('sequence-reset');
+        setTimeout(()=>container.classList.remove('sequence-reset'),1000);
+    }
 }
 
 function carregarRelatorio(){
@@ -216,7 +257,6 @@ function exportarCSV(){
     const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="rondas.csv"; link.click();
 }
 
-// Inicialização
 window.onload=()=>{
     vigilante=localStorage.getItem("vigilanteLogado");
     if(vigilante){
@@ -228,8 +268,6 @@ window.onload=()=>{
         carregarRondasGitHub();
         mostrarSecao("ronda");
     } else mostrarSecao("login");
-
-    // Atualização automática a cada 2 segundos
     setInterval(()=>{ if(vigilante) carregarRondasGitHub(); },2000);
 };
 </script>
