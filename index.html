@@ -1,97 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Ronda QR - App</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    /* Reset e fontes */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
-    body { background: #f0f2f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
-    header { background: #c0392b; color: #fff; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; }
-    main { flex: 1; padding: 15px; max-width: 500px; margin: auto; width: 100%; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Ronda QR - App</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+body { display: flex; min-height: 100vh; background: #f0f2f5; transition: all 0.3s ease; }
 
-    /* Navegação */
-    nav { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; }
-    nav button {
-      flex: 1; margin: 5px; padding: 12px 0; border: none; border-radius: 12px; cursor: pointer;
-      background: #c0392b; color: #fff; font-weight: bold; transition: 0.3s;
-    }
-    nav button:hover { background: #e74c3c; }
-    nav button:disabled { background: #aaa; cursor: not-allowed; }
+nav { width: 220px; background: #c0392b; color: #fff; display: flex; flex-direction: column; padding-top: 20px; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
+nav .logo { display: flex; justify-content: center; margin-bottom: 20px; }
+nav .logo img { width: 150px; border-radius: 8px; }
+nav button { margin: 5px 15px; padding: 12px; border: none; border-radius: 8px; cursor: pointer; background: #e74c3c; color: #fff; font-weight: bold; font-size: 16px; transition: 0.3s; }
+nav button.active { background: #ff5c4d; }
+nav button:hover { background: #ff5c4d; }
+nav button:disabled { background: #aaa; cursor: not-allowed; }
 
-    section { display: none; animation: fadeIn 0.3s ease-in-out; }
-    section.active { display: block; }
+.hamburger { display: none; position: absolute; top: 15px; left: 15px; width: 30px; height: 3px; background: #fff; cursor: pointer; transition: all 0.3s ease; }
+.hamburger::before, .hamburger::after { content: ''; position: absolute; width: 30px; height: 3px; background: #fff; transition: all 0.3s ease; }
+.hamburger::before { top: -10px; }
+.hamburger::after { bottom: -10px; }
 
-    /* Inputs e botões */
-    input, textarea, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; }
-    button { background: #c0392b; color: #fff; font-weight: bold; border: none; cursor: pointer; }
-    button:hover { background: #e74c3c; }
-    textarea { resize: vertical; min-height: 60px; }
+main { flex: 1; padding: 20px; overflow-y: auto; transition: all 0.3s ease; }
 
-    /* Scanner QR */
-    #reader { width: 100%; max-width: 300px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+section { display: none; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; }
+section.active { display: block; opacity: 1; transform: translateY(0); }
 
-    /* Cards para checkpoints */
-    .checkpoints { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
-    .checkpoint { background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: bold; }
+input, textarea, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; transition: all 0.2s ease; }
+button { background: #c0392b; color: #fff; font-weight: bold; border: none; cursor: pointer; }
+button:hover { background: #e74c3c; }
+textarea { resize: vertical; min-height: 60px; }
 
-    /* Relatório */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    th, td { padding: 12px; text-align: center; }
-    th { background: #c0392b; color: #fff; font-weight: bold; }
-    tr:nth-child(even) { background: #f7f7f7; }
-    .status-ok { color: #2ecc71; font-weight: bold; }        /* verde */
-    .status-rejeitado { color: #e74c3c; font-weight: bold; } /* vermelho */
+#reader { width: 100%; max-width: 300px; margin: 20px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
-    /* Animação fade */
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.checkpoints { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+.checkpoint { background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: bold; transition: background 0.3s ease; }
+.checkpoint.ok { background: #2ecc71; color: #fff; }
+.checkpoint.pending { background: #e74c3c; color: #fff; }
 
-    /* Responsivo */
-    @media(max-width: 480px) {
-      nav { flex-direction: column; }
-      nav button { flex: none; }
-    }
-  </style>
+table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+th, td { padding: 12px; text-align: center; }
+th { background: #c0392b; color: #fff; font-weight: bold; }
+tr:nth-child(even) { background: #f7f7f7; }
+.status-ok { color: #2ecc71; font-weight: bold; }
+.status-rejeitado { color: #e74c3c; font-weight: bold; }
+
+@keyframes fadeInRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeInRow 0.5s ease forwards; }
+
+@media(max-width: 768px){
+    body { flex-direction: column; }
+    nav { width: 100%; flex-direction: column; position: fixed; top: 0; left: -250px; height: 100%; z-index: 1000; padding-top: 60px; box-shadow: 2px 0 12px rgba(0,0,0,0.2); }
+    nav.show { left: 0; transition: left 0.3s ease; }
+    .hamburger { display: block; }
+    main { padding: 80px 20px 20px 20px; }
+}
+</style>
 </head>
 <body>
 
-<header>Sistema de Ronda QR</header>
+<div class="hamburger" onclick="toggleMenu()"></div>
+
+<nav id="menuNav">
+  <div class="logo">
+    <img src="https://www.megarelogios.com.br/wp-content/uploads/2017/04/logotipo.png" alt="Logo">
+  </div>
+  <button onclick="mostrarSecao('login')" id="menuLogin" class="active">Login</button>
+  <button id="btnRonda" onclick="mostrarSecao('ronda')" disabled>Ronda</button>
+  <button id="btnRelatorio" onclick="mostrarSecao('relatorio')" disabled>Relatório</button>
+  <button id="btnLogout" onclick="logout()" disabled>Sair</button>
+</nav>
 
 <main>
-  <!-- Navegação -->
-  <nav>
-    <button onclick="mostrarSecao('login')">Login</button>
-    <button id="btnRonda" onclick="mostrarSecao('ronda')" disabled>Ronda</button>
-    <button id="btnRelatorio" onclick="mostrarSecao('relatorio')" disabled>Relatório</button>
-    <button id="btnLogout" onclick="logout()" disabled>Sair</button>
-  </nav>
-
-  <!-- Login -->
-  <section id="login" class="active">
+  <section id="login">
     <h2>Login do Vigilante</h2>
     <input type="text" id="vigilante" placeholder="Digite seu nome">
     <input type="password" id="senha" placeholder="Digite sua senha">
     <button onclick="loginVigilante()">Entrar</button>
   </section>
 
-  <!-- Ronda -->
   <section id="ronda">
     <h2>Ronda - Leitura de QR Code</h2>
     <p>Vigilante: <b id="nomeVigilante"></b></p>
-
     <h3>Observações</h3>
     <textarea id="observacao" placeholder="Opcional"></textarea>
-
     <div id="reader"></div>
-
     <h3>Checkpoints válidos</h3>
     <div class="checkpoints" id="listaCheckpoints"></div>
   </section>
 
-  <!-- Relatório -->
   <section id="relatorio">
     <h2>Relatório de Rondas</h2>
     <button onclick="exportarCSV()">Exportar CSV</button>
@@ -111,133 +110,128 @@
 </main>
 
 <script>
-  const usuarios = [
-    {nome: "João", senha: "1234"},
-    {nome: "Maria", senha: "abcd"},
-    {nome: "Pedro", senha: "5678"}
-  ];
+const usuarios = [{nome: "João", senha: "1234"}, {nome: "Maria", senha: "abcd"}, {nome: "Pedro", senha: "5678"}];
+const checkpointsValidos = ["P1","P2","P3","P4","P5"];
+let scanner = null;
+let vigilante = null;
+const GITHUB_JSON_URL = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPOSITORIO/main/rondas.json";
 
-  const checkpointsValidos = ["P1", "P2", "P3", "P4", "P5"];
-  let scanner = null;
-  let vigilante = null;
-
-  function mostrarSecao(secaoId) {
+function toggleMenu(){ document.getElementById('menuNav').classList.toggle('show'); }
+function mostrarSecao(secaoId){
     document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(secaoId).classList.add("active");
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    if(secaoId==='login') document.getElementById('menuLogin').classList.add('active');
+    else if(secaoId==='ronda') document.getElementById('btnRonda').classList.add('active');
+    else if(secaoId==='relatorio') document.getElementById('btnRelatorio').classList.add('active');
+    if(window.innerWidth <= 768) toggleMenu();
+    if(secaoId==="ronda" && !scanner) iniciarScanner();
+    if(secaoId==="ronda") carregarCheckpoints();
+    if(secaoId==="relatorio") carregarRelatorio();
+}
 
-    if (secaoId === "ronda" && !scanner) iniciarScanner();
-    if (secaoId === "ronda") carregarCheckpoints();
-    if (secaoId === "relatorio") carregarRelatorio();
-  }
+function loginVigilante(){
+    const nome=document.getElementById('vigilante').value.trim();
+    const senha=document.getElementById('senha').value.trim();
+    const usuario=usuarios.find(u=>u.nome===nome&&u.senha===senha);
+    if(usuario){
+        vigilante=usuario.nome;
+        localStorage.setItem("vigilanteLogado",vigilante);
+        document.getElementById("nomeVigilante").textContent=vigilante;
+        document.getElementById("btnRonda").disabled=false;
+        document.getElementById("btnRelatorio").disabled=false;
+        document.getElementById("btnLogout").disabled=false;
+        document.getElementById("menuLogin").style.display="none";
+        carregarRondasGitHub();
+        mostrarSecao("ronda");
+    } else alert("Usuário ou senha incorretos!");
+}
 
-  function loginVigilante() {
-    const nome = document.getElementById('vigilante').value.trim();
-    const senha = document.getElementById('senha').value.trim();
-    const usuario = usuarios.find(u => u.nome === nome && u.senha === senha);
-
-    if (usuario) {
-      vigilante = usuario.nome;
-      localStorage.setItem("vigilanteLogado", vigilante);
-      document.getElementById("nomeVigilante").textContent = vigilante;
-      document.getElementById("btnRonda").disabled = false;
-      document.getElementById("btnRelatorio").disabled = false;
-      document.getElementById("btnLogout").disabled = false;
-      mostrarSecao("ronda");
-    } else {
-      alert("Usuário ou senha incorretos!");
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem("vigilanteLogado");
-    vigilante = null;
-    document.getElementById("btnRonda").disabled = true;
-    document.getElementById("btnRelatorio").disabled = true;
-    document.getElementById("btnLogout").disabled = true;
+function logout(){
+    localStorage.removeItem("vigilanteLogado"); vigilante=null;
+    document.getElementById("btnRonda").disabled=true;
+    document.getElementById("btnRelatorio").disabled=true;
+    document.getElementById("btnLogout").disabled=true;
+    document.getElementById("menuLogin").style.display="block";
     mostrarSecao("login");
-  }
+}
 
-  function registrarRondaQR(checkpointId) {
-    const observacao = document.getElementById('observacao').value.trim();
-    const hora = new Date().toLocaleString();
-    let status = "REJEITADO";
+function registrarRondaQR(checkpointId){
+    const observacao=document.getElementById('observacao').value.trim();
+    const hora=new Date().toLocaleString();
+    let status=checkpointsValidos.includes(checkpointId)?"OK":"REJEITADO";
+    alert(status==="OK"?"✅ QR Code válido!":"❌ QR Code inválido!");
+    let rondas=JSON.parse(localStorage.getItem('rondas'))||[];
+    rondas.push({vigilante,checkpoint:checkpointId,status,observacao,hora});
+    localStorage.setItem('rondas',JSON.stringify(rondas));
+    document.getElementById('observacao').value='';
+    carregarCheckpoints();
+    carregarRelatorio();
+}
 
-    if (checkpointsValidos.includes(checkpointId)) {
-      status = "OK";
-      alert("✅ QR Code válido! Ronda registrada.");
-    } else {
-      alert("❌ QR Code inválido!");
-    }
+function iniciarScanner(){
+    scanner=new Html5Qrcode("reader");
+    scanner.start({facingMode:"environment"},{fps:10,qrbox:250},decodedText=>registrarRondaQR(decodedText));
+}
 
-    let rondas = JSON.parse(localStorage.getItem('rondas')) || [];
-    rondas.push({vigilante, checkpoint: checkpointId, status, observacao, hora});
-    localStorage.setItem('rondas', JSON.stringify(rondas));
-    document.getElementById('observacao').value = '';
-  }
-
-  function iniciarScanner() {
-    scanner = new Html5Qrcode("reader");
-    scanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      (decodedText) => registrarRondaQR(decodedText)
-    );
-  }
-
-  function carregarRelatorio() {
-    const rondas = JSON.parse(localStorage.getItem('rondas')) || [];
-    const tabela = document.getElementById('tabelaRondas');
-    tabela.innerHTML = "";
-    rondas.forEach(r => {
-      let statusClass = r.status === "OK" ? "status-ok" : "status-rejeitado";
-      let row = `<tr>
-        <td>${r.hora}</td>
-        <td>${r.vigilante}</td>
-        <td>${r.checkpoint}</td>
-        <td class="${statusClass}">${r.status}</td>
-        <td>${r.observacao}</td>
-      </tr>`;
-      tabela.innerHTML += row;
+function carregarCheckpoints(){
+    const container=document.getElementById('listaCheckpoints'); container.innerHTML="";
+    const rondas=JSON.parse(localStorage.getItem('rondas'))||[];
+    const checkpointsRegistrados=rondas.filter(r=>r.vigilante===vigilante && r.status==="OK").map(r=>r.checkpoint);
+    checkpointsValidos.forEach(cp=>{
+        const div=document.createElement('div'); div.className='checkpoint';
+        div.classList.add(checkpointsRegistrados.includes(cp)?'ok':'pending'); div.textContent=cp;
+        container.appendChild(div);
     });
-  }
+}
 
-  function exportarCSV() {
-    const rondas = JSON.parse(localStorage.getItem('rondas')) || [];
-    if (!rondas.length) { alert("Nenhuma ronda registrada!"); return; }
-
-    let csv = 'Vigilante,Checkpoint,Status,Observacao,DataHora\n';
-    rondas.forEach(r => {
-      csv += `"${r.vigilante}","${r.checkpoint}","${r.status}","${r.observacao}","${r.hora}"\n`;
+function carregarRelatorio(){
+    const rondas=JSON.parse(localStorage.getItem('rondas'))||[];
+    const tabela=document.getElementById('tabelaRondas'); tabela.innerHTML="";
+    rondas.forEach(r=>{
+        const statusClass=r.status==="OK"?"status-ok":"status-rejeitado";
+        const row=document.createElement('tr'); row.className="fade-in";
+        row.innerHTML=`<td>${r.hora}</td><td>${r.vigilante}</td><td>${r.checkpoint}</td><td class="${statusClass}">${r.status}</td><td>${r.observacao}</td>`;
+        tabela.appendChild(row);
     });
+}
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "rondas.csv";
-    link.click();
-  }
+async function carregarRondasGitHub(){
+    try{
+        const response=await fetch(GITHUB_JSON_URL);
+        if(!response.ok) throw new Error("Não foi possível carregar os dados do GitHub.");
+        const rondas=await response.json();
+        localStorage.setItem('rondas',JSON.stringify(rondas));
+        carregarCheckpoints();
+        carregarRelatorio();
+    } catch(err){ console.error("Erro ao carregar rondas do GitHub:",err); }
+}
 
-  function carregarCheckpoints() {
-    const container = document.getElementById('listaCheckpoints');
-    container.innerHTML = "";
-    checkpointsValidos.forEach(cp => {
-      const div = document.createElement('div');
-      div.className = 'checkpoint';
-      div.textContent = cp;
-      container.appendChild(div);
-    });
-  }
+function exportarCSV(){
+    const rondas=JSON.parse(localStorage.getItem('rondas'))||[];
+    if(!rondas.length){alert("Nenhuma ronda registrada!"); return;}
+    let csv='Vigilante,Checkpoint,Status,Observacao,DataHora\n';
+    rondas.forEach(r=>csv+=`"${r.vigilante}","${r.checkpoint}","${r.status}","${r.observacao}","${r.hora}"\n`);
+    const blob=new Blob([csv],{ type:'text/csv;charset=utf-8;' });
+    const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="rondas.csv"; link.click();
+}
 
-  window.onload = () => {
-    vigilante = localStorage.getItem("vigilanteLogado");
-    if (vigilante) {
-      document.getElementById("nomeVigilante").textContent = vigilante;
-      document.getElementById("btnRonda").disabled = false;
-      document.getElementById("btnRelatorio").disabled = false;
-      document.getElementById("btnLogout").disabled = false;
-      mostrarSecao("ronda");
-    }
-  }
+// Inicialização
+window.onload=()=>{
+    vigilante=localStorage.getItem("vigilanteLogado");
+    if(vigilante){
+        document.getElementById("nomeVigilante").textContent=vigilante;
+        document.getElementById("btnRonda").disabled=false;
+        document.getElementById("btnRelatorio").disabled=false;
+        document.getElementById("btnLogout").disabled=false;
+        document.getElementById("menuLogin").style.display="none";
+        carregarRondasGitHub();
+        mostrarSecao("ronda");
+    } else mostrarSecao("login");
+
+    // Atualização automática a cada 2 segundos
+    setInterval(()=>{ if(vigilante) carregarRondasGitHub(); },2000);
+};
 </script>
 </body>
 </html>
